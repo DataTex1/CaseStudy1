@@ -1,18 +1,18 @@
 ---
-title: "CaseStudy1"
+title: "Strategic Market Analysis"
 author: "Karen, Samuel, Laurence"
 date: "February 8, 2019"
 output: 
         html_document:
         keep_md: yes
----
+--- 
 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-<!-- install packages -->
+<!-- install packages hidden-->
 ```{r echo=FALSE, include=FALSE}
 
     install.packages('dplyr', repos="http://cran.us.r-project.org")
@@ -20,20 +20,24 @@ knitr::opts_chunk$set(echo = TRUE)
     install.packages('rvest', repos="http://cran.us.r-project.org")
     install.packages('ggplot2', repos="http://cran.us.r-project.org")
     install.packages('psych', repos="http://cran.us.r-project.org")
+    install.packages('maps', repos="http://cran.us.r-project.org")
+    install.packages('plyr', repos="http://cran.us.r-project.org")
+    
+    library(dplyr)
+    library(knitr)
+    library(rvest)
+    library(ggplot2)
+    library(psych)
+    library(maps)
+    library(plyr)
 
 ```
-      **libraries used**
-      
-        library(dplyr)
-        library(knitr)
-        library(rvest)
-        library(ggplot2)
-        library(psych)
-      
+## Introduction
+As of the latest 2015 data, AB InBev enjoys a 45.8% Share of the US beer market. While the merger with InBev has made Anheuser-Busch the largest brewer in America, when aggregate data is considered AB InBev has in fact seen a total reduction of 1.4% in its share of the US beer market when compared to 2014 data, this despite the fact that worldwide, AB InBev has seen a steady growth in market share. One factor for this may be the growing micro brew movement and the influx of craft beers into the market. AB InBev's market strategy has been and continues to be the marketing and support of its core Brands and segment growth through acquisition of established brands. However, an analysis of market competition seems to indicates that the micro brew movement has grown from a novelty product to a serious brand competitor. This analysis will explore AB InBev's emerging competition by analyzing the breweries and beers currently competing for US consumers.  
 
 
-## Load dataset into R.
-
+## The Data
+Data was derived from a nationwide dataset of 558 US breweries and a matching dataset of 2,410 US craft beers. We analyzed the data and compared it to state geographic data to determine the distribution of the breweries by state. We then analyzed the alcohol by volume (ABV) and international bitterness units (IBU) of the sampled beers to identify trends, characteristics,  correlations.  
 
 
 ```{r ReadFile}
@@ -41,85 +45,127 @@ setwd("C:/SMU/doing_data_science/CaseStudy1/CaseStudy1")
 #Read in the beers.csv and set to data frame
 Beers <- read.csv("Beers.csv", header = TRUE, sep = ",")
 
-
 #Read in the Breweries.csv and set to data frame
 Breweries <- read.csv("Breweries.csv", header = TRUE, sep = ",")
 
-
+#Read in the states.csv and set to data frame
+States <- read.csv("states.csv", header = TRUE, sep = ",")
 
 ```
+  
+## Analysis Tools for R-Studio
 
-##  Merge document and show top and bottom 6 rows
-
-
-```{r merging}
+To conduct the research we used R-studio as our primary statistical analysis software and loaded the following statistical packages:
+      
+  library(dplyr)  
+  library(knitr)  
+  library(rvest)  
+  library(ggplot2)  
+  library(psych)  
+  library(maps)  
+  library(plyr)  
+  
+  
+<!-- cleaning up the data hidden-->
+```{r merging, echo=FALSE, include=FALSE}
 #add equivalent name to Beers data frame for merge
 Beers$Brew_ID <- Beers$Brewery_id
 
-
-#Merge the data frames
+#merge the data frames
 dataset_merge <- merge(Breweries,Beers, by="Brew_ID",all=TRUE)
 
-#Top 6 observations from merged file
-Top6 <- head(dataset_merge,6)
-Top6
+#clean up dataset_merge
+BeerData <- dataset_merge
+BeerData$Brewery_id <- NULL
+BeerData$Brew_ID <- NULL
+BeerData$Beer_ID <- NULL
+colnames(BeerData) <- c('Brewery','City','State','Beer','ABV','IBU','Style','Ounces')
+BeerData <- BeerData[c(1,2,3,4,7,5,6,8)]
+BeerData <- BeerData[order(BeerData$State), ]
+rownames(BeerData) <- NULL
 
-#Bottome 6 observations from merged file
-Bottom6 <- tail(dataset_merge)
-Bottom6
-
+#Create new CSV of merged data
+write.csv(BeerData, file = "BeerData.csv")
 ```
-## Rename columns to be more readable
 
-```{r rename columns}
-#Rename columns 
-names(dataset_merge) <- c("Brew_ID","Company_Name","City","State","Beer_Name","Beer_ID","ABV","IBU", "Brew_ID","Beer_Style","OUnces")
-Top10 <- head(dataset_merge)
-Top10
-
-```
-## Show NA
-```{r showNA}
-#Get NA count from each column
-
-ExamineNA <- function(column){
-    
-                  testNA <- sum(is.na(dataset_merge[column]))
-                  
-                  print (column)
-                  print (testNA)
-                }
   
-  
- 
-for (x in names(dataset_merge)){ ExamineNA(x)}
+## From Alaska to Wyoming A Revolution is Brewing
+Nationwide there has been a tremendous increase in the number of microbreweries that have entered the market over the last five years. According to data from the Brewer's Association the number of microbreweries in the US jumped from 620 in 2010 to 2,626 in 2015. 
 
+###### *https://www.brewersassociation.org/statistics/number-of-breweries/
+```{r}
+
+#reduce data set to Brewery, State, and Beer
+beers <- BeerData[c(1,3,5)]
+
+#pull and filter sample beers and display from head
+Alaska <- head(beers,10)
+P1 <- Alaska[2:7, ]
+
+#pull and filter sample beers and display from tail
+Wyoming <- tail(beers)
+P2 <- Wyoming[1:6, ]
+
+knitr::kable(list(P1, P2), row.names = FALSE)
 ```
+
+## Data Driven Brewing
+Thoug small, most of the breweries are making complex beers for an ever growing market of consumers that want to know more about beer. All 2,410 beers in the data set had a specified style and type, 97% of the beers had a specified ABV, and 58% of the beers had a specified IBU.      
+```{r}
+colSums(!is.na(BeerData[4:7]))
+```
+
 
 ## Breweries per state
 
-```{r BreweriesPerState}
-#find number of breweries in state
-library(plyr)
+<!-- create beerMap hidden code-->
+```{r BeerMap, echo=FALSE, include=TRUE}
 
-BreweryState <- count(dataset_merge,"State")
-BreweryState
+    library("maps")
+
+map.text("state", regions=c("alabama", "arizona", "arkansas", "california", "colorado", "connecticut", "delaware", "florida", "georgia", "idaho", "illinois", "indiana", "iowa", "kansas", "kentucky", "louisiana", "maine", "maryland", "massachusetts:main", "michigan:north", "minnesota", "mississippi", "missouri", "montana", "nebraska", "nevada", "new hampshire", "new jersey", "new mexico", "new york:main", "north carolina:main", "north dakota", "ohio", "oklahoma", "oregon", "pennsylvania", "rhode island", "south carolina", "south dakota", "tennessee", "texas", "utah", "vermont", "virginia:main", "washington:main", "west virginia", "wisconsin", "wyoming"), labels=as.character(c(10, 47, 5, 183, 265, 27, 2, 58, 16, 30, 91, 139, 30, 23, 21, 19, 27, 21, 82, 162, 55, 11, 42, 40, 25, 11, 8, 8, 14, 74, 59, 3, 49, 19, 125, 100, 27, 14, 7, 6, 130, 26, 27, 40, 68, 2, 87, 15)))
+
 
 ```
 
-## Plot Breweries per state
+<!-- clean up brewery by state data hidden-->
+```{r BreweriesPerState, echo=FALSE, include=TRUE}
+#find number of breweries in state
+#library(plyr)
+#library(maps)
+BreweryState <- count(dataset_merge,"State")
+BreweryState <- BreweryState[-c(1,8,12), ]
+BreweryState <- BreweryState[order(BreweryState$State), ]
+rownames(BreweryState) <- NULL
+States <- States[-c(2,11), ]
+States <- States[order(States$State), ]
+rownames(States) <- NULL
+BreweryState$StateLong <- States$StateLong
+BrewStateLst <- BreweryState[c(3,2)]
+BrewStateLst <- BrewStateLst[order(BrewStateLst$StateLong), ]
+colnames(BrewStateLst) <- c("State", "Breweries")
+
+#BrewStateLst2 <- BrewStateLst[order(BrewStateLst$Breweries, decreasing=TRUE), ]
+#print(BrewStateLst2[1:10, ], row.names=FALSE) 
+#knitr::kable(BrewStateLst2[1:10, ], row.names = FALSE)
+
+L1 <- BrewStateLst[1:16, ]
+L2 <- BrewStateLst[17:32, ]
+L3 <- BrewStateLst[33:48, ]
+
+knitr::kable(list(L1, L2, L3), row.names = FALSE)
+
+```
+
+## Breweries Per State Graph
 
 ```{r statesize}
-
 #Plot of Breweries per State
 library(ggplot2)
-
 b1 <- ggplot(BreweryState, aes(x=reorder(BreweryState$State,-BreweryState$freq), y=BreweryState$freq, fill=BreweryState$State)) +
   
 geom_bar(stat="identity") + labs(title ="Breweries in States", x= "States", y="Number of Breweries", fill="States") + theme(text = element_text(size=7),axis.text.x = element_text(angle=90, hjust=1))
-
 b1
-
 ```
 ## Compute the median alcohol content and international bitterness unit for each state.
 
