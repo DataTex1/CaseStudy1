@@ -22,6 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
     install.packages('psych', repos="http://cran.us.r-project.org")
     install.packages('maps', repos="http://cran.us.r-project.org")
     install.packages('plyr', repos="http://cran.us.r-project.org")
+    install.packages('kableExtra', repos="http://cran.us.r-project.org")
     
     library(dplyr)
     library(knitr)
@@ -30,6 +31,7 @@ knitr::opts_chunk$set(echo = TRUE)
     library(psych)
     library(maps)
     library(plyr)
+    library(kableExtra)
 
 ```
 ## Introduction
@@ -167,57 +169,95 @@ geom_bar(stat="identity") + labs(title ="Breweries in States", x= "States", y="N
 b1
 ```
 
-
-## Compute the median alcohol content and international bitterness unit for each state.
-
+#A Look into ABV and IBU
+The median alcohol content and international bitterness units were calculated for each state and are shown in the tables and barplots below.    
 
 ```{r medians}
 #Compute the median alcohol content and international bitterness unit for each state. Plot a bar chart to compare. 
 library(psych)
+#library(kableExtra)
 ABV_St <- describeBy(dataset_merge$ABV, dataset_merge$State, mat=T)
+colnames(ABV_St)[colnames(ABV_St)=="group1"] <- "State"
 IBU_St <- describeBy(dataset_merge$IBU, dataset_merge$State, mat=T)
-head(ABV_St)
+colnames(IBU_St)[colnames(IBU_St)=="group1"] <- "State"
 head(IBU_St)
-```
-## Barplots of median alcohol by volume and IBU  
+ABV_St[,c(2,7)] %>%
+  kable() %>%
+  kable_styling()
+IBU_St[,c(2,7)] %>%
+  kable() %>%
+  kable_styling()
+```        
+
 
 ```{r Final}
 #bar plot of Median Alcohol by volumne
-ABV_plot <- ggplot(ABV_St, aes(x=reorder(ABV_St$group,-ABV_St$median), y=ABV_St$median, fill=ABV_St$group1)) +
+ABV_plot <- ggplot(ABV_St, aes(x=ABV_St$State, y=ABV_St$median, fill=ABV_St$State)) +
   geom_bar(stat="identity") + labs(title ="Median Alcohol by Volume in States", x= "States", y="ABV", fill="States") + theme(text = element_text(size=9),axis.text.x = element_text(angle=90, hjust=1))
 ABV_plot
 #bar plot of Median IBU in states
-IBU_plot <- ggplot(IBU_St, aes(x=reorder(IBU_St$group,-IBU_St$median), y=IBU_St$median, fill=IBU_St$group1)) +
+IBU_plot <- ggplot(IBU_St, aes(x=IBU_St$State, y=IBU_St$median, fill=IBU_St$State)) +
   geom_bar(stat="identity") + labs(title ="Median Intl Bitterness in States", x= "States", y="IBU", fill="States") + theme(text = element_text(size=9),axis.text.x = element_text(angle=90, hjust=1))	
 IBU_plot
-#Kentucky KY and DC show to be hightes  median ABV
-summary(ABV_St)
-#max IBU shown to be Maine (ME)
-summary(IBU_St)
-```
+```    
 
-## Final Plots
+As shown graphically, Kentucky (KY) and Washington D.C. (DC) have breweries with the highest alcohol content (ABV) based on median values.     
+
+Comparing the medians of IBU for each state, the most bitter beers are found in Maine.    
+  
+Alcohol by Volume across all breweries ranges from 0.001 to 0.1280. The average ABV is 0.05977 which is slightly higher than the median of 0.056. This means that the average ABV level is pulled higher by some beers with higher alcohol content, but the concentration of ABV levels is close to being evenly scattered around the average. The first quartile is 0.05 and the third quartile is 0.067.    
+
+```{r}
+#Kentucky KY and DC show to be hightes  median ABV
+summary(dataset_merge$ABV)
+```    
+
+The international bitterness units range from 4 to 138 across the beers. In this distribution there are more beers are concentrated towards the lower end of IBU levels. There are some very bitter beers that skew the average IBU level (42.71) to be higher than the median IBU value (35). The first quartile IBU is 21 and the third quartile is 64. 
+
+```{r}
+#max IBU shown to be Maine (ME)
+summary(dataset_merge$IBU)
+```    
+
 
 ```{r finalplots}
 library(ggplot2)
-#merge by group1 (states) for plot
-ABV_IBU_merge <- merge(ABV_St,IBU_St, by="group1",all=TRUE)
-#scatter plot of ABV and IBU
-med_scatter <- ggplot(ABV_IBU_merge, aes(x=ABV_IBU_merge$median.x, y=ABV_IBU_merge$median.y)) + geom_point(color="blue") + labs(title="Median Alcohol by Volume vs International Bitterness",x="Median Alcohol by Volume", y = "Median Intl Bitterness")+   theme_classic()  
-med_scatter 
-#scatter w/ regression line
-med_scat_reg <- ggplot(ABV_IBU_merge, aes(x=ABV_IBU_merge$median.x, y=ABV_IBU_merge$median.y)) + geom_point(color="blue") + labs(title="Median Alcohol by Volume vs International Bitterness",x="Median Alcohol by Volume", y = "Median Intl Bitterness")+   theme_classic() + stat_ellipse() + geom_smooth(method=lm)
-med_scat_reg 
+
+```     
+
+There is a positive linear trend between IBU and ABV, meaning as alchol content increases, bitterness tends to increase as well. However, due to the fanning shape of the scatterplot, it appears that beers with lower alcohol content appear to have more similar bitterness levels than those with higher alchol. At higher ABV, there is more variation in bitterness levels. Beers can either have a low bitterness level or high level at the same alcohol content level, but on average, the bitterness tends to be higher than beers with lower ABV.     
+
+```{r}
+scatter2<- ggplot(dataset_merge[,-1], aes(x=dataset_merge$ABV, y=dataset_merge$IBU))+geom_point(color="blue")+labs(title="Alcohol by Volume vs International Bitterness",x="Alcohol by Volume", y = "Intl Bitterness")+  theme_classic()+ stat_ellipse() + geom_smooth(method=lm)
+scatter2
+ 
+```    
+
+This graph shows the both the median ABV and IBU values for each state. Particular states of interest are Utah and New Jersey, who have low median ABV levels compared to the clustered range of the other states. Likewise, Florida, Georgia, Maine, and West Virginia differ greatly from the other states and tend to have beers with higher bitterness levels.    
+
+```{r}
 #point bplot by state
-med_plot_by_state <- ggplot(ABV_IBU_merge, aes(x = ABV_IBU_merge$group)) + 
+med_plot_by_state <- ggplot(ABV_IBU_merge, aes(x = ABV_IBU_merge$State)) + 
   geom_point(aes(y = ABV_IBU_merge$median.x *1000), colour="blue") + 
   geom_point(aes(y = ABV_IBU_merge$median.y), colour = "red") + 
   ylab(label="Alcohol by volume and Intl Bitterness") + 
   xlab("States") + theme(text = element_text(size=9),axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("Median Alcohol by volume(Blue) x 1000 and International Bitterness(Red) by State")
 med_plot_by_state
-#R standard for comparison
-plot(dataset_merge$ABV, dataset_merge$IBU, main="Alcohol by Vol vs Bitterness", xlab="ABV", ylab="IBU")
-#summary stats on ABV
-summary(dataset_merge$ABV)
-summary(ABV_St)
-```
+sample<-sample.int(2410,250)
+```    
+
+For readability, a random sample of 250 beers were selected to invesigate the variance in differences between IBU and ABV. The variance in these differences are pretty high, since all the line segments are not the same length. This further supports the idea that bitterness levels are highly variable, and are only partially explained by alcohol content.    
+
+
+```{r}
+combined<-ggplot(dataset_merge[sample,-1], aes(x=Beer_ID))+
+  geom_point(aes(y=dataset_merge[sample,7]*1000, colour="blue"), show.legend = FALSE)+
+  geom_point(aes(y=dataset_merge[sample,8], colour="red"), show.legend = FALSE)+
+  geom_segment(aes(x=dataset_merge[sample,6], y=dataset_merge[sample,7]*1000,xend=dataset_merge[sample,6], yend=dataset_merge[sample,8]))+ ylab(label="ABV and IBU")+
+  xlab("Beer")+theme(text=element_text(size=9),axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("Alcohol by volume(Red) x 1000 and International Bitterness(Blue)")+theme_classic()
+combined
+```    
+
+#Recommendations    
+
+Competition is growing for AB InBev. Competitors have beers with a wide variety of IBU levels, and these levels also vary by state. This suggests that tastes differ in different markets, and also that tastes are expanding from just a singular style of beer. To compete, InBev should diversify their beer offerings, even regionally. Most beers tend to have simialar alcohol content levels, although some variation in ABV is another dimension that can add to InBev's beer profile. AB InBev should stategically position themselves to meet the expanding consumer demand.    
