@@ -111,7 +111,7 @@ knitr::kable(list(P1, P2), row.names = FALSE)
 ```
 
 ## Data Driven Brewing
-Thoug small, most of the breweries are making complex beers for an ever growing market of consumers that want to know more about beer. All 2,410 beers in the data set had a specified style and type, 97% of the beers had a specified ABV, and 58% of the beers had a specified IBU.      
+Though small, most of the breweries are making complex beers for an ever growing market of consumers that want to know more about beer. All 2,410 beers in the data set had a specified style and type, 97% of the beers had a specified ABV, and 58% of the beers had a specified IBU.      
 ```{r}
 colSums(!is.na(BeerData[4:7]))
 ```
@@ -131,9 +131,6 @@ map.text("state", regions=c("alabama", "arizona", "arkansas", "california", "col
 
 <!-- clean up brewery by state data hidden-->
 ```{r BreweriesPerState, echo=FALSE, include=TRUE}
-#find number of breweries in state
-#library(plyr)
-#library(maps)
 BreweryState <- count(dataset_merge,"State")
 BreweryState <- BreweryState[-c(1,8,12), ]
 BreweryState <- BreweryState[order(BreweryState$State), ]
