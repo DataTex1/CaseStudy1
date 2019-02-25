@@ -15,23 +15,23 @@ knitr::opts_chunk$set(echo = TRUE)
 <!-- install packages hidden-->
 ```{r echo=FALSE, include=FALSE}
 
-    install.packages('dplyr', repos="http://cran.us.r-project.org")
-    install.packages('knitr', repos="http://cran.us.r-project.org")
-    install.packages('rvest', repos="http://cran.us.r-project.org")
-    install.packages('ggplot2', repos="http://cran.us.r-project.org")
-    install.packages('psych', repos="http://cran.us.r-project.org")
-    install.packages('maps', repos="http://cran.us.r-project.org")
-    install.packages('plyr', repos="http://cran.us.r-project.org")
-    install.packages('kableExtra', repos="http://cran.us.r-project.org")
-    
-    library(dplyr)
-    library(knitr)
-    library(rvest)
-    library(ggplot2)
-    library(psych)
-    library(maps)
-    library(plyr)
-    library(kableExtra)
+install.packages('dbplyr', repos="http://cran.us.r-project.org")
+install.packages('knitr', repos="http://cran.us.r-project.org")
+install.packages('rvest', repos="http://cran.us.r-project.org")
+install.packages('ggplot2', repos="http://cran.us.r-project.org")
+install.packages('psych', repos="http://cran.us.r-project.org")
+install.packages('maps', repos="http://cran.us.r-project.org")
+install.packages('plyr', repos="http://cran.us.r-project.org")
+install.packages('kableExtra', repos="http://cran.us.r-project.org")
+
+library(dbplyr)
+library(knitr)
+library(rvest)
+library(ggplot2)
+library(psych)
+library(maps)
+library(plyr)
+library(kableExtra)
 
 ```
 ## Introduction
@@ -45,13 +45,13 @@ Data was derived from a nationwide dataset of 558 US breweries and a matching da
 ```{r ReadFile}
 
 #Read in the beers.csv and set to data frame
-Beers <- read.csv("C:/CaseStudy1/Beers.csv", header = TRUE, sep = ",")
+Beers <- read.csv("C:/git/DDSCase1/CaseStudy1/Beers.csv", header = TRUE, sep = ",")
 
 #Read in the Breweries.csv and set to data frame
-Breweries <- read.csv("C:/CaseStudy1/Breweries.csv", header = TRUE, sep = ",")
+Breweries <- read.csv("C:/git/DDSCase1/CaseStudy1/Breweries.csv", header = TRUE, sep = ",")
 
 #Read in the states.csv and set to data frame
-States <- read.csv("C:/CaseStudy1/states.csv", header = TRUE, sep = ",")
+States <- read.csv("C:/git/DDSCase1/CaseStudy1/states.csv", header = TRUE, sep = ",")
 ```
   
 ## Analysis Tools for R-Studio
@@ -146,6 +146,13 @@ BrewStateLst <- BreweryState[c(3,2)]
 BrewStateLst <- BrewStateLst[order(BrewStateLst$StateLong), ]
 colnames(BrewStateLst) <- c("State", "Breweries")
 
+ABV_St <- describeBy(dataset_merge$ABV, dataset_merge$State, mat=T)
+IBU_St <- describeBy(dataset_merge$IBU, dataset_merge$State, mat=T)
+
+#merge by group1 (states) for plot
+ABV_IBU_merge <- merge(ABV_St,IBU_St, by="group1",all=TRUE)
+
+
 #BrewStateLst2 <- BrewStateLst[order(BrewStateLst$Breweries, decreasing=TRUE), ]
 #print(BrewStateLst2[1:10, ], row.names=FALSE) 
 #knitr::kable(BrewStateLst2[1:10, ], row.names = FALSE)
@@ -217,6 +224,8 @@ The international bitterness units range from 4 to 138 across the beers. In this
 ```{r}
 #max IBU shown to be Maine (ME)
 summary(dataset_merge$IBU)
+
+
 ```    
 
 
@@ -236,8 +245,8 @@ scatter2
 This graph shows the both the median ABV and IBU values for each state. Particular states of interest are Utah and New Jersey, who have low median ABV levels compared to the clustered range of the other states. Likewise, Florida, Georgia, Maine, and West Virginia differ greatly from the other states and tend to have beers with higher bitterness levels.    
 
 ```{r}
-#point bplot by state
-med_plot_by_state <- ggplot(ABV_IBU_merge, aes(x = ABV_IBU_merge$State)) + 
+# point bplot by state
+med_plot_by_state <- ggplot(ABV_IBU_merge, aes(x = ABV_IBU_merge$group1)) + 
   geom_point(aes(y = ABV_IBU_merge$median.x *1000), colour="blue") + 
   geom_point(aes(y = ABV_IBU_merge$median.y), colour = "red") + 
   ylab(label="Alcohol by volume and Intl Bitterness") + 
